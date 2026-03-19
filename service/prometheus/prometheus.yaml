@@ -4,6 +4,10 @@ global:
 
 rule_files:
   - "alerting_rules.yaml"
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["localhost:9093"] # default Alertmanager port
 scrape_configs:
   - job_name: "job-processor"
     static_configs:
