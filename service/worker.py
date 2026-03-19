@@ -39,7 +39,7 @@ async def process_job(job_id: str):
         job.status = JobStatus.processing
         await db.commit()
 
-        # raise Exception("worker crashed")
+        # raise Exception("worker crashed") # for crashing simulation
 
         log.info(f"Processing job {job_id} | payload={job.payload}")
 
@@ -69,7 +69,6 @@ async def process_job(job_id: str):
             # Always record duration and update queue gauge regardless of outcome
             duration = time.time() - start_time
             JOB_PROCESSING_DURATION.observe(duration)
-            QUEUE_DEPTH.dec()
 
         await db.commit()
 

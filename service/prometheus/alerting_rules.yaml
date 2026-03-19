@@ -1,0 +1,84 @@
+groups:
+  - name: job_processor_alerts
+    rules:
+      # --- Stuck Jobs ---
+      # A job has been in 'processing' for too long — worker died mid-job
+      - alert: StuckJobsDetected
+        expr: jobs_stuck_processing{job="job-processor"} > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Jobs are stuck in processing state"
+          description: "{{ $value }} job(s) have been stuck in processing for more than 5 minutes. A worker likely crashed mid-job."
+
+      # --- High Failure Rate ---
+      # More than 20% of jobs are failing over the last 5 minutes
+      - alert: HighJobFailureRate
+        expr: |
+          rate(jobs_completed_total{status="failed", job="job-worker"}[1m])
+          /
+          rate(jobs_completed_total{job="job-worker"}[1m])
+          > 0.2
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High job failure rate detected"
+          description: "{{ $value | humanizePercentage }} of jobs are failing over the last 5 minutes."
+
+      # --- Queue Depth Too High ---
+      # Jobs are piling up — workers can't keep up with submissions
+      - alert: QueueDepthTooHigh
+        expr: job_queue_depth{job="job-processor"} > 100
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Job queue depth is too high"
+          description: "Queue depth is {{ $value }} — workers are not keeping up with job submissions."
+
+      # --- Worker Is Down ---
+      # No completed jobs in the last 5 minutes but jobs are being submitted
+      - alert: WorkerNotProcessing
+        expr: |
+          rate(jobs_submitted_total{job="job-processor"}[1m]) > 0
+          and
+          rate(jobs_completed_total{job="job-worker"}[1m]) == 0
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Worker has stopped processing jobs"
+          description: "Jobs are being submitted but none are being completed. Worker may be down."
+
+      # --- High Processing Time ---
+      # 95th percentile job processing time is too high
+      - alert: HighProcessingTime95thPercentile
+        expr: histogram_quantile(0.95, rate(job_processing_duration_seconds_bucket[1m])) > 0.5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High job processing time detected"
+          description: "95th percentile job processing time is {{ $value }} seconds — jobs are taking too long to process."
+
+      # --- High Processing Time ---
+      # 99th percentile job processing time is too high
+      - alert: HighProcessingTime99thPercentile
+        expr: histogram_quantile(0.99, rate(job_processing_duration_seconds_bucket[1m])) > 2
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High job processing time detected"
+          description: "95th percentile job processing time is {{ $value }} seconds — jobs are taking too long to process."
+
+      - alert: WorkerTargetDown
+        expr: up{job="job-worker"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Worker is unreachable"
+          description: "Prometheus cannot scrape the worker — it may be down."
