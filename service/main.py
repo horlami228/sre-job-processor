@@ -10,6 +10,8 @@ from database import engine, get_db, Base
 from redis_client import get_redis, redis_client
 from models import Job, JobStatus
 from config import settings
+from prometheus_fastapi_instrumentator import Instrumentator
+from metrics import JOBS_SUBMITTED, QUEUE_DEPTH, JOBS_STUCK
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,6 +25,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Job Processor", lifespan=lifespan)
 
+# Auto-instruments all routes with request duration, status codes etc
+# exposes /metrics endpoint for Prometheus to scrape
+Instrumentator().instrument(app).expose(app)
 # --- Schemas ---
 
 class JobSubmit(BaseModel):
@@ -54,6 +59,10 @@ async def submit_job(
     # Push job ID onto the Redis queue — worker will pick it up
     await redis.rpush(settings.JOB_QUEUE_KEY, job.id)
 
+      # Track job submission
+    JOBS_SUBMITTED.inc()
+    QUEUE_DEPTH.inc()
+ 
     return job
 
 
@@ -97,10 +106,16 @@ async def queue_depth(
         select(func.count()).where(Job.status == JobStatus.processing)
     )
 
+    processing_count = db_processing.scalar()
+
+    QUEUE_DEPTH.set(redis_depth)
+    JOBS_STUCK.set(processing_count)
+    print(processing_count)
+
     return {
         "redis_queue_depth": redis_depth,
         "db_pending": db_pending,
-        "db_processing": db_processing.scalar(),
+        "db_processing": processing_count,
     }
 
 

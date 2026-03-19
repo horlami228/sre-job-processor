@@ -10,13 +10,17 @@ This is where you'll introduce failures for SRE practice.
 import asyncio
 import logging
 import random
+import time
 
 import redis.asyncio as aioredis
 from sqlalchemy import select
+from prometheus_client import start_http_server
 
 from config import settings
 from database import AsyncSessionLocal, engine, Base
 from models import Job, JobStatus
+from metrics import JOBS_COMPLETED, JOB_PROCESSING_DURATION, QUEUE_DEPTH
+from prometheus_client import start_http_server
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -34,31 +38,45 @@ async def process_job(job_id: str):
         # Mark as processing
         job.status = JobStatus.processing
         await db.commit()
-        raise Exception("worker crashed")
+
+        # raise Exception("worker crashed")
+
         log.info(f"Processing job {job_id} | payload={job.payload}")
 
+        start_time = time.time()
         try:
             # Simulate work — replace this with real logic later
             await asyncio.sleep(random.uniform(0.5, 2.0))
 
             # Uncomment to simulate random failures (good for SRE practice):
-            if random.random() < 0.3:
-                raise ValueError("Simulated processing failure")
+            # if random.random() < 0.3:
+            #     raise ValueError("Simulated processing failure")
 
             job.status = JobStatus.done
             job.result = f"Processed: {job.payload}"
             log.info(f"Job {job_id} completed")
+
+            JOBS_COMPLETED.labels(status="done").inc()
 
         except Exception as e:
             job.status = JobStatus.failed
             job.error = str(e)
             log.error(f"Job {job_id} failed: {e}")
 
+            JOBS_COMPLETED.labels(status="failed").inc()
+        
+        finally:
+            # Always record duration and update queue gauge regardless of outcome
+            duration = time.time() - start_time
+            JOB_PROCESSING_DURATION.observe(duration)
+            QUEUE_DEPTH.dec()
+
         await db.commit()
 
 
 async def main():
     # Ensure tables exist (useful if worker starts before API)
+    start_http_server(8001)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
