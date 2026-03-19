@@ -1,5 +1,5 @@
 global:
-  slack_api_url: "https://hooks.slack.com/services/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"
+  slack_api_url: "https://hooks.slack.com/services/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"
   resolve_timeout: 5m # how long to wait before sending a resolved notification
 
 route:
