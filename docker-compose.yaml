@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: sre
       POSTGRES_DB: jobs
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -20,7 +20,7 @@ services:
   redis:
     image: redis:7
     ports:
-      - "6379:6379"
+      - "6377:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -46,6 +46,8 @@ services:
   worker:
     build: .
     command: python worker.py
+    expose:
+      - "8001"
     environment:
       DATABASE_URL: postgresql+asyncpg://sre:sre@postgres:5432/jobs
       REDIS_URL: redis://redis:6379
@@ -62,8 +64,8 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./service/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml
-      - ./service/prometheus/alerting_rules.yaml:/etc/prometheus/alerting_rules.yaml
+      - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alerting_rules.yaml:/etc/prometheus/alerting_rules.yaml
     depends_on:
       - app
       - worker
@@ -73,7 +75,7 @@ services:
     ports:
       - "9093:9093"
     volumes:
-      - ./service/prometheus/alertManager.yaml:/etc/alertmanager/alertmanager.yml
+      - ./prometheus/alertManager.yaml:/etc/alertmanager/alertmanager.yml
 
   grafana:
     image: grafana/grafana:latest

@@ -7,13 +7,13 @@ rule_files:
 alerting:
   alertmanagers:
     - static_configs:
-        - targets: ["localhost:9093"] # default Alertmanager port
+        - targets: ["alertmanager:9093"] # default Alertmanager port
 
 scrape_configs:
   - job_name: "job-processor"
     static_configs:
-      - targets: ["localhost:8080"]
+      - targets: ["app:8000"]
 
   - job_name: "job-worker"
     static_configs:
-      - targets: ["localhost:8001"]
+      - targets: ["worker:8001"]
