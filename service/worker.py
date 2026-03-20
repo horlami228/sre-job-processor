@@ -39,7 +39,7 @@ async def process_job(job_id: str):
         job.status = JobStatus.processing
         await db.commit()
 
-        # raise Exception("worker crashed") # for crashing simulation
+        raise Exception("worker crashed") # for crashing simulation
 
         log.info(f"Processing job {job_id} | payload={job.payload}")
 

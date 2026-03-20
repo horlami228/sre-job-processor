@@ -11,6 +11,7 @@ groups:
         annotations:
           summary: "Jobs are stuck in processing state"
           description: "{{ $value }} job(s) have been stuck in processing for more than 5 minutes. A worker likely crashed mid-job."
+          runbook: "https://github.com/horlami/sre-job-processor/blob/main/runbooks/stuckJobs.md"
 
       # --- High Failure Rate ---
       # More than 20% of jobs are failing over the last 5 minutes
@@ -26,6 +27,7 @@ groups:
         annotations:
           summary: "High job failure rate detected"
           description: "{{ $value | humanizePercentage }} of jobs are failing over the last 5 minutes."
+          runbook: "https://github.com/horlami/sre-job-processor/blob/main/runbooks/highFailureRate.md"
 
       # --- Queue Depth Too High ---
       # Jobs are piling up — workers can't keep up with submissions
@@ -37,6 +39,7 @@ groups:
         annotations:
           summary: "Job queue depth is too high"
           description: "Queue depth is {{ $value }} — workers are not keeping up with job submissions."
+          runbook: "https://github.com/horlami/sre-job-processor/blob/main/runbooks/queueDepthTooHigh.md"
 
       # --- Worker Is Down ---
       # No completed jobs in the last 5 minutes but jobs are being submitted
@@ -51,6 +54,7 @@ groups:
         annotations:
           summary: "Worker has stopped processing jobs"
           description: "Jobs are being submitted but none are being completed. Worker may be down."
+          runbook: "https://github.com/horlami/sre-job-processor/blob/main/runbooks/workerNotProcessing.md"
 
       # --- High Processing Time ---
       # 95th percentile job processing time is too high
@@ -62,6 +66,7 @@ groups:
         annotations:
           summary: "High job processing time detected"
           description: "95th percentile job processing time is {{ $value }} seconds — jobs are taking too long to process."
+          runbook: "https://github.com/horlami/sre-job-processor/blob/main/runbooks/highProcessingTime.md"
 
       # --- High Processing Time ---
       # 99th percentile job processing time is too high
@@ -73,6 +78,7 @@ groups:
         annotations:
           summary: "High job processing time detected"
           description: "95th percentile job processing time is {{ $value }} seconds — jobs are taking too long to process."
+          runbook: "https://github.com/horlami/sre-job-processor/blob/main/runbooks/highProcessingTime.md"
 
       - alert: WorkerTargetDown
         expr: up{job="job-worker"} == 0
@@ -82,3 +88,4 @@ groups:
         annotations:
           summary: "Worker is unreachable"
           description: "Prometheus cannot scrape the worker — it may be down."
+          runbook: "https://github.com/horlami/sre-job-processor/blob/main/runbooks/workerTargetDown.md"
