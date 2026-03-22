@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker
+  namespace: sre-job-processor
+spec:
+  selector:
+    app: job-processor-worker
+  ports:
+    - port: 8001
+      targetPort: 8001
