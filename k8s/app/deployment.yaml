@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: job-processor-app-deploy
+  namespace: sre-job-processor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: job-processor-app
+  template:
+    metadata:
+      labels:
+        app: job-processor-app
+    spec:
+      containers:
+        - name: job-processor
+          image: horlami228/sre-job-processor:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: sre-job-processor-secrets
+                  key: DATABASE_URL
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: sre-job-processor-secrets
+                  key: REDIS_URL
