@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-alerting-rules
+  namespace: sre-job-processor
+data:
+  alerting_rules.yml: |
+    groups:
+      - name: job_processor_alerts
+        rules:
+          - alert: StuckJobsDetected
+            expr: jobs_stuck_processing{job="job-processor"} > 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Jobs are stuck in processing state"
+              description: "{{ $value }} job(s) stuck in processing"
+              runbook: "https://github.com/horlami228/sre-job-processor/blob/main/runbooks/stuckJobs.md"
+
+          - alert: HighJobFailureRate
+            expr: |
+              rate(jobs_completed_total{status="failed", job="job-worker"}[5m])
+              /
+              rate(jobs_completed_total{job="job-worker"}[5m])
+              > 0.2
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High job failure rate detected"
+              description: "{{ $value | humanizePercentage }} of jobs are failing"
+              runbook: "https://github.com/horlami228/sre-job-processor/blob/main/runbooks/highFailureRate.md"
+
+          - alert: QueueDepthTooHigh
+            expr: job_queue_depth{job="job-processor"} > 100
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Job queue depth is too high"
+              description: "Queue depth is {{ $value }}"
+              runbook: "https://github.com/horlami228/sre-job-processor/blob/main/runbooks/queueDepthTooHigh.md"
+
+          - alert: WorkerTargetDown
+            expr: up{job="job-worker"} == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Worker is unreachable"
+              description: "Prometheus cannot scrape the worker"
+              runbook: "https://github.com/horlami228/sre-job-processor/blob/main/runbooks/workerTargetDown.md"
+
+          - alert: HighProcessingTime99thPercentile
+            expr: histogram_quantile(0.99, rate(job_processing_duration_seconds_bucket[1m])) > 2
+            for: 1m
+            labels:
+            severity: warning
+            annotations:
+            summary: "High job processing time detected"
+            description: "95th percentile job processing time is {{ $value }} seconds — jobs are taking too long to process."
+            runbook: "https://github.com/horlami228/sre-job-processor/blob/main/runbooks/highProcessingTime.md"
+
+          - alert: HighProcessingTime95thPercentile
+          expr: histogram_quantile(0.95, rate(job_processing_duration_seconds_bucket[1m])) > 0.5
+          for: 1m
+          labels:
+          severity: warning
+          annotations:
+          summary: "High job processing time detected"
+          description: "95th percentile job processing time is {{ $value }} seconds — jobs are taking too long to process."
+          runbook: "https://github.com/horlami228/sre-job-processor/blob/main/runbooks/highProcessingTime.md"
