@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sre-job-processor-config
+  namespace: sre-job-processor
+data:
+  POSTGRES_USER: sre
+  POSTGRES_DB: jobs
