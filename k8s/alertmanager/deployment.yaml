@@ -20,17 +20,11 @@ spec:
             - "--config.file=/etc/alertmanager/alertmanager.yml"
           ports:
             - containerPort: 9093
-          env:
-            - name: SLACK_WEBHOOK_URL
-              valueFrom:
-                secretKeyRef:
-                  name: alertmanager-secret
-                  key: SLACK_WEBHOOK_URL
           volumeMounts:
             - name: alertmanager-config
               mountPath: /etc/alertmanager/alertmanager.yml
               subPath: alertmanager.yml
       volumes:
         - name: alertmanager-config
-          configMap:
-            name: alertmanager-config
+          secret:
+            secretName: alertmanager-config-secret
