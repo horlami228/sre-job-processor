@@ -56,18 +56,18 @@ data:
             expr: histogram_quantile(0.99, rate(job_processing_duration_seconds_bucket[1m])) > 2
             for: 1m
             labels:
-            severity: warning
+              severity: warning
             annotations:
-            summary: "High job processing time detected"
-            description: "95th percentile job processing time is {{ $value }} seconds — jobs are taking too long to process."
-            runbook: "https://github.com/horlami228/sre-job-processor/blob/main/runbooks/highProcessingTime.md"
+              summary: "High job processing time detected"
+              description: "95th percentile job processing time is {{ $value }} seconds — jobs are taking too long to process."
+              runbook: "https://github.com/horlami228/sre-job-processor/blob/main/runbooks/highProcessingTime.md"
 
           - alert: HighProcessingTime95thPercentile
-          expr: histogram_quantile(0.95, rate(job_processing_duration_seconds_bucket[1m])) > 0.5
-          for: 1m
-          labels:
-          severity: warning
-          annotations:
-          summary: "High job processing time detected"
-          description: "95th percentile job processing time is {{ $value }} seconds — jobs are taking too long to process."
-          runbook: "https://github.com/horlami228/sre-job-processor/blob/main/runbooks/highProcessingTime.md"
+            expr: histogram_quantile(0.95, rate(job_processing_duration_seconds_bucket[1m])) > 0.5
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High job processing time detected"
+              description: "95th percentile job processing time is {{ $value }} seconds — jobs are taking too long to process."
+              runbook: "https://github.com/horlami228/sre-job-processor/blob/main/runbooks/highProcessingTime.md"
