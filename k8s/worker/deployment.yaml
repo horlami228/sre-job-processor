@@ -4,7 +4,7 @@ metadata:
   name: worker
   namespace: sre-job-processor
 spec:
-  replicas: 2
+  replicas: 5
   selector:
     matchLabels:
       app: job-processor-worker
