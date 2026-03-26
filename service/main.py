@@ -132,3 +132,22 @@ async def health(redis=Depends(get_redis)):
         "status": "ok" if redis_ok else "degraded",
         "redis": "ok" if redis_ok else "unreachable",
     }
+
+
+@app.get("/healthz/live")
+async def liveness():
+    return {"status": "alive"}
+
+
+@app.get("/healthz/ready")
+async def readiness(redis=Depends(get_redis)):
+    try:
+        await redis.ping()
+        redis_ok = True
+    except Exception:
+        redis_ok = False
+
+    return {
+        "status": "ok" if redis_ok else "degraded",
+        "redis": "ok" if redis_ok else "unreachable",
+    }
