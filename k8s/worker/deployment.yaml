@@ -28,3 +28,15 @@ spec:
                 secretKeyRef:
                   name: sre-job-processor-secrets
                   key: REDIS_URL
+          livenessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - |
+                  import time, sys
+                  t = float(open('/tmp/worker-alive').read())
+                  sys.exit(0 if time.time() - t < 30 else 1)
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            failureThreshold: 3

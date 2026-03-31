@@ -12,6 +12,7 @@ from models import Job, JobStatus
 from config import settings
 from prometheus_fastapi_instrumentator import Instrumentator
 from metrics import JOBS_SUBMITTED, QUEUE_DEPTH, JOBS_STUCK
+from fastapi import Response
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -140,13 +141,16 @@ async def liveness():
 
 
 @app.get("/healthz/ready")
-async def readiness(redis=Depends(get_redis)):
+async def readiness(redis=Depends(get_redis), response: Response = None):
     try:
         await redis.ping()
         redis_ok = True
     except Exception:
         redis_ok = False
 
+    if not redis_ok:
+        response.status_code = 503
+        
     return {
         "status": "ok" if redis_ok else "degraded",
         "redis": "ok" if redis_ok else "unreachable",

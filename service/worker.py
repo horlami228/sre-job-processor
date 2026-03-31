@@ -83,6 +83,12 @@ async def main():
     log.info("Worker started — waiting for jobs...")
 
     while True:
+
+        # touch heartbeat file so liveness probe knows worker is alive
+        with open("/tmp/worker-alive", "w") as f:
+            f.write(str(time.time()))
+
+
         # BLPOP blocks until a job arrives (timeout=5 to allow clean shutdown)
         item = await redis.blpop(settings.JOB_QUEUE_KEY, timeout=5)
         if item is None:
