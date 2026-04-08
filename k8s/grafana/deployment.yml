@@ -26,7 +26,14 @@ spec:
                   key: admin-password
           volumeMounts:
             - name: grafana-storage
-              mountPath: /var/lib/grafana
+              mountPath: /var/lib/grafan
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "400m"
+              memory: "512Mi"
       volumes:
         - name: grafana-storage
           persistentVolumeClaim:
